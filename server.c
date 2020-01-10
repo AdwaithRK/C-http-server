@@ -9,11 +9,12 @@
 #define PORT 8080
 
 struct params
-{ 
+{
     char *path;
     char *query;
 } current_params, empty_params;
 
+char *http_header = "HTTP/1.1 200 OK\nContent-Type: text/html\n\n";
 
 char * get_header(const char *buffer)
 {
@@ -67,8 +68,6 @@ int parse(const char* buffer)
 
 }
 
-
-
 int main(int argc, char const *argv[])
 {
     int server_fd, new_socket; long valread;
@@ -78,7 +77,6 @@ int main(int argc, char const *argv[])
     // Read html file
     FILE *f = fopen ("index.html", "rb");
 
-    char *http_header = "HTTP/1.1 200 OK\nContent-Type: text/html\n\n";
 
     fseek(f, 0, SEEK_END);
     long fsize = ftell(f);
@@ -95,8 +93,6 @@ int main(int argc, char const *argv[])
     strcpy( content, http_header);
     strcat( content, string );
 
-
-    printf("The file contents are %s", content);
     // Creating socket file descriptor
     if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0)
     {
