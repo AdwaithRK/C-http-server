@@ -8,6 +8,13 @@
 
 #define PORT 8080
 
+struct params
+{ 
+    char *path;
+    char *query;
+} current_params, empty_params;
+
+
 char * get_header(const char *buffer)
 {
     int i=0, j=0;
@@ -24,7 +31,6 @@ char * get_header(const char *buffer)
     }
     temp[j] = '\0';
 
-    printf("The header is---- %s", temp);
     return temp;
 }
 
@@ -35,30 +41,28 @@ int parse(const char* buffer)
     const char *start_of_path = strchr(line, ' ') + 1;
     const char *start_of_query;
     const char *end_of_query;
+    char *path, *query;
     if( start_of_path ){
-        start_of_path = strchr(start_of_path, '?');
+        start_of_query = strchr(start_of_path, '?');
     }
-    if( end_of_query ){
+    if( start_of_query) {
         end_of_query = strchr(start_of_query, ' ');
     }
 
-    printf(" Start of path is---- %s", start_of_path);
-    printf(" Start of query is---- %s", start_of_query);
-    printf(" End of query is------%s", end_of_query);
-
-
     if( start_of_path && start_of_query ){
-        char path[start_of_query - start_of_path];
+        int path_length = start_of_query - start_of_path;
+        path = (char*)malloc((path_length)*sizeof(char));
         strncpy(path, start_of_path,  start_of_query - start_of_path);
-        path[sizeof(path)] = 0;
-        printf("%s\n", path, sizeof(path));
+        path[path_length] = 0;
+        current_params.path = path;
     }
 
     if( end_of_query && start_of_query ){
-        char query[end_of_query - start_of_query];
+        int path_length = end_of_query - start_of_query;
+        query = (char*)malloc((path_length)*sizeof(char));
         strncpy(query, start_of_query, end_of_query - start_of_query);
-        query[sizeof(query)] = 0;
-        printf("%s\n", query, sizeof(query));
+        query[path_length] = 0;
+        current_params.query = query;
     }
 
 }
@@ -120,6 +124,7 @@ int main(int argc, char const *argv[])
     }
     while(1)
     {
+        current_params = empty_params;
         printf("\n+++++++ Waiting for new connection ++++++++\n\n");
         if ((new_socket = accept(server_fd, (struct sockaddr *)&address, (socklen_t*)&addrlen))<0)
         {
@@ -129,11 +134,17 @@ int main(int argc, char const *argv[])
         
         char buffer[30000] = {0};
         valread = read( new_socket , buffer, 30000);
-        printf("Request is %s\n",buffer);
+        printf("-----------------Request--------------------");
+        printf("\n%s\n",buffer);
+        printf("--------------------------------------------");
         parse(buffer);
         write(new_socket , content , strlen(content));
         // get_header(buffer);
         close(new_socket);
+        printf("\n------------Connection Closed----------------\n");
+        printf("\n----------------------Params--------------------------\n");
+        printf("\n    ----- Path: %s --------\n", current_params.path );
+        printf("\n    ----- Query: %s -------\n", current_params.query);
     }
     return 0;
 }
